@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html><head></head><body style="color: rgb(32, 33, 34); font-family: verdana, sans-serif; font-size: 12px;"><h4><strong>before lab 1:<br><br>make sure you have $ACT_HOME exported : </strong></h4>
+<h4><strong><code>export ACT_HOME=&lt;path to act install&gt;</code><br><br>add act to your path:<br><br><code>export PATH=$PATH:$ACT_HOME/bin</code><br><br>Lab 1</strong>: Production rule and CHP simulation</h4>
+<p>Due: March 2, 23:59 CET. Submit on Learn in group.</p>
+<p><strong>Goal.</strong> The goal of this lab is to simulate designs described in production rules and designs described in CHP.<br>New tools used in this lab:</p>
+<p><code>&nbsp; &nbsp; actsim: simulate ACT files</code><br><code>&nbsp; &nbsp; prs2net: generate SPICE files from ACT&nbsp;</code></p>
+<h3>&nbsp; Part 1: Production rules</h3>
+<p>We will write production rules using the ACT file format. ACT is a hardware description langugae that can be used to describe both synchronous and asynchronous circuits. Circuits are described using production rules, and the circuit can be specified using a hierarchical structure. Components can be arrayed, grouped together, or connected to each other using simple constructs. The following ACT file describes a process that corresponds to one inverter.</p>
+<p><code>defproc inv (bool? in; bool! out)</code><br><code>{</code><br><code>&nbsp; &nbsp;prs {</code><br><code>&nbsp; &nbsp; &nbsp;in -&gt; out-</code><br><code>&nbsp; &nbsp;~in -&gt; out+</code><br><code>&nbsp; &nbsp;}</code><br><code>}</code></p>
+<p>The parameters in parentheses are the ports for the process (i.e. what you can connect to externally), and the signals are of type bool to indicate they are Boolean-valued variables. Additionally, the port in is declared as a bool?, where the ? indicates the signal is an input; similarly, the ! indicates that out is an output.</p>
+<p>Assuming the file above is called inv.act, the following ACT file can be used to create a single inverter:</p>
+<p><code>import "inv.act";</code><br><code>inv i;</code></p>
+<p>This program imports the previously defined ACT file, and then creates an instance of an inverter called "i". The process "inv" can be viewed as the type of the instance \i".</p>
+<p>Viewing all production rules. If the file above is called "test_inv.act", a production rule file can be created from the ACT file by:</p>
+<p><code>% aflat -Tsky130l test_inv.act &gt; test_inv.prs</code></p>
+<p>The output file is the following:</p>
+<p><code>"i.in"-&gt;"i.out"-</code><br><code>~"i.in"-&gt;"i.out"+</code></p>
+<p>Note that ACT uses "." (like standard programming languages) as a separator between the name of the instance and internal nodes within it. (Note that Xyce uses colon).</p>
+<p>Simulating production rules. If the file above is called "test_inv.act", a production rule file can be created from the ACT file by:</p>
+<p>To simulate the inverter defined in "inv.act", run</p>
+<p><code>% actsim inv.act 'inv' &nbsp; &nbsp;</code></p>
+<p><code>actsim&gt; watch in&nbsp;</code><br><code>actsim&gt; watch out</code><br><code>actsim&gt; status X</code><br><code>actsim&gt; set in 0</code><br><code>actsim&gt; cycle</code><br><code>actsim&gt; set in 1</code><br><code>actsim&gt; cycle</code></p>
+<p>actsim will check if the production rules being run are stable and non-interfering. It doesn't check all possible delay configurations, but just reports errors if it observes unstable or interfering production rules while the simulation is running. Try "help" as an actsim command to see the range of commands supported by actsim.</p>
+<p>One of the useful features of actsim is that it can automatically randomize the delays of production rule firings. To do this, use</p>
+<p><code>actsim&gt; random</code></p>
+<p>After this command, all delays are randomized. This is a useful test to see if your production rules are stable and non-interfering. If actsim finds that a production rule is unstable, it sets its output to "X" (for undefined). These "X"s can propagate through the circuit.</p>
+<p></p>
+<p>Some more information about ACT can be found here:</p>
+<p>&nbsp; <a href="https://avlsi.csl.yale.edu/act/doku.php?id=language:start" target="_blank" rel="noopener">&nbsp; Language documentation&nbsp;</a></p>
+<p>Consider the ACT file</p>
+<p><code>defproc invarray (bool in[8], out[8])</code><br><code>{</code></p>
+<p><code>&nbsp; &nbsp;inv x[8];</code></p>
+<p><code>&nbsp; &nbsp;( i : 8 : x[i].in = in[i]; x[i].out = out[i]; )&nbsp;</code><br><code>}</code></p>
+<p>This process creates an array of 8 inverters. The second statement is a loop construct. The loop index is i, the range is 0 to 7, and the body of the loop contains two statements: x[i].in = in[i], and x[i].out = out[i]. Both of them connect two signals to each other.</p>
+<p>Each ACT process will correspond to a particular "layout" cell. The ACT hierarchy should match the hierarchy of the layout corresponding to the design specified by the ACT file.</p>
+<p>Write an ACT file cells.act that defines the production rules for all the three circuits:</p>
+<p>&nbsp; &nbsp; nand2, nor2, inv&nbsp;</p>
+<p>In addition, include definitions of production rules for an inverting C-element</p>
+<p>&nbsp; &nbsp; Run simple digital simulations using actsim and make sure the observed behavior is what you expected. Note that actsim also takes a script file as input (the actsim command is called "source").</p>
+<p>For all of these, use scripts to drive the simulators so that you can easily reproduce your results.</p>
+<h3>Part 2: CHP simulation</h3>
+<p>The ACT language can be used to describe a CHP process. Instead of using prs to specify the language being used, use chp instead. The following is an example of a one-place buffer that uses 8-bit integers:</p>
+<p><code>defproc oneplace (chan?(int&lt;8&gt;) l; chan!(int&lt;8&gt;) r)</code><br><code>{</code><br><code>&nbsp; int&lt;8&gt; x;</code><br><code>&nbsp; chp {</code><br><code>&nbsp; &nbsp; *[ l?x; r!x ]</code><br><code>&nbsp; }</code><br><code>}</code></p>
+<p>A four-place buffer would be written like this:</p>
+<p><code>defproc fourbuf (chan?(int&lt;8&gt;) l; chan!(int&lt;8&gt;) r)</code><br><code>{</code><br><code>&nbsp; oneplace buf[4];</code><br><code>&nbsp; (i:3: buf[i].r=buf[i+1].l;)</code><br><code>&nbsp; buf[0].l=l;</code><br><code>&nbsp; buf[3].r=r;</code><br><code>}</code></p>
+<p>Assuming those process definitions were in buf.act, you can test this program by creating a testbuf.act file containing:</p>
+<p><code>import "buf.act";</code></p>
+<p><code>defproc source (chan!(int&lt;8&gt;) X)</code><br><code>{</code><br><code>&nbsp; int&lt;8&gt; i;</code><br><code>&nbsp; chp {</code><br><code>&nbsp; &nbsp; i := 0;</code><br><code>&nbsp; *[ i &lt; 100 -&gt; X!i; i := i + 1 ]</code><br><code>&nbsp; }</code><br><code>}</code></p>
+<p><code>defproc sink (chan?(int&lt;8&gt;) X)</code><br><code>{</code><br><code>&nbsp; int&lt;8&gt; v;</code><br><code>&nbsp; chp {</code><br><code>&nbsp; &nbsp; *[ X?v; log ("Received value: ", v) ]</code><br><code>&nbsp; }</code><br><code>}</code></p>
+<p><code>defproc test()</code><br><code>{</code><br><code>&nbsp; &nbsp;source src;</code><br><code>&nbsp; &nbsp;sink snk;</code><br><code>&nbsp; &nbsp;fourbuf b(src.X, snk.X);</code><br><code>}</code></p>
+<p>To run the simulation, say:</p>
+<p><code>% actsim -Wlang_subst:off testbuf.act test</code></p>
+<p><code>actsim&gt; cycle</code><br><code>[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;60] &nbsp; Received value: 0</code><br><code>[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;80] &nbsp; Received value: 1</code><br><code>[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 100] &nbsp; Received value: 2</code><br><code>[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 120] &nbsp; Received value: 3</code><br><code>[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 140] &nbsp; Received value: 4</code><br><code>...</code><br><code>[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;2040] &nbsp; Received value: 99</code><br><code>actsim&gt;</code></p>
+<p>The<br>log statement is useful to see what your program is doing. The log message shows the simulation time along with the message and name of the instance.</p>
+<p>ACT also permits templated process construction. So, for example, a templated N-place buffer would be:</p>
+<p><code>template&lt;pint N&gt; defproc buffer (chan?(int&lt;8&gt;) l; chan!(int&lt;8&gt;) r)</code><br><code>{</code><br><code>&nbsp; { N &gt;= 1 : "Buffer should have at least one element!" }; // assertion</code><br><code>&nbsp; oneplace buf[N];</code><br><code>&nbsp; (i:N-1: buf[i].r=buf[i+1].l;)</code><br><code>&nbsp; buf[0].l=l;</code><br><code>&nbsp; buf[N-1].r=r;</code><br><code>}</code></p>
+<p>The test program can be replaced by:</p>
+<p><code>defproc test()</code><br><code>{</code><br><code>&nbsp; &nbsp;source src;</code><br><code>&nbsp; &nbsp;sink snk;</code><br><code>&nbsp; &nbsp;buffer&lt;4&gt; b(src.X, snk.X);</code><br><code>}</code></p>
+<p>For this part:</p>
+<p>&nbsp; &nbsp; Write the CHP for the buffer example above, and test a 10-place buffer.<br>&nbsp; &nbsp; Write the CHP for an N-place priority queue prio.act, where the smallest value has the highest priority. (Hint: use a recursive construction to implement this.) The queue should have a command input port that specifies if the next operation is an "insert" or a "remove", one input data port (to insert a new value), and one output data port (where the removed value can be read by the environment). Again, include test cases to verify the functionality of your CHP program.&nbsp;</p>
+<p>The syntax for other CHP constructs is <a href="https://avlsi.csl.yale.edu/act/doku.php?id=language:langs:chp" target="_blank" rel="noopener">available</a>.</p>
+<h3>&nbsp; What you have to submit</h3>
+<p>For this lab, turn in a zip file that contains:</p>
+<p>&nbsp; &nbsp; ACT files<br>&nbsp; &nbsp; &nbsp; &nbsp; cells.act, containing all process definitions (part 1)<br>&nbsp; &nbsp; &nbsp; &nbsp; test_inv.act, test_nand2.act, test_nor2.act, test_celem2.act, containing the test instance that is used to verify the act file&nbsp; (part 1)<br>&nbsp; &nbsp; &nbsp; &nbsp; ACT files for part 2&nbsp;<br>&nbsp; &nbsp; Testing scripts<br>&nbsp; &nbsp; &nbsp; &nbsp; test_inv.scr, test_nand2.scr, test_nor2.scr, test_celem2.scr: actsim script files for testing gates (part 1)<br>&nbsp; &nbsp; &nbsp; &nbsp; Test scripts for actsim in part 2.&nbsp;<br>&nbsp; &nbsp; README: a plain text file that explains how we can verify that your lab works correctly for all parts. This should include clear testing instructions, and any explanations that you think are necessary to explain how you completed each part. In particular, this should include an explanation of how you implemented the priority queue and why that implementation is correct. You dont need to write much keep it short, include your names or student numbers in each file!</p>
+<p>Note: many test scripts will be very similar to each other. You can save a lot of time by writing bash/Python/Perl/tcl/Ruby/insert-your-favorite-method-here to generate some of the files automatically, and using Makefiles for automation.</p></body></html>
