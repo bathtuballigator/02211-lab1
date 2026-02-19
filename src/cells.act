@@ -1,0 +1,33 @@
+defproc inv(bool? in; bool! out)
+{
+  prs {
+     in -> out-
+    ~in -> out+
+  }
+}
+
+defproc nand2(bool? a, b; bool! out)
+{
+  prs {
+     a & b -> out-
+    ~a     -> out+
+    ~b     -> out+
+  }
+}
+
+defproc nor2(bool? a, b; bool! out)
+{
+  prs {
+    ~a & ~b -> out+
+     a      -> out-
+     b      -> out-
+  }
+}
+
+defproc inv_c(bool? a, b; bool! out)
+{
+  prs {
+     a &  b -> out-
+    ~a & ~b -> out+
+  }
+}
