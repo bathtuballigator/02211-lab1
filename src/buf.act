@@ -1,0 +1,17 @@
+defproc oneplace (chan?(int<8>) l; chan!(int<8>) r)
+{
+  int<8> x;
+  chp {
+    *[ l?x; r!x ]
+  }
+}
+
+template<pint N> defproc buffer (chan?(int<8>) l; chan!(int<8>) r)
+{
+  { N >= 1 : "Buffer should have at least one element!" }; // assertion
+  oneplace buf[N];
+  (i:N-1: buf[i].r=buf[i+1].l;)
+  buf[0].l=l;
+  buf[N-1].r=r;
+}
+

@@ -1,0 +1,28 @@
+
+import "buf.act";
+
+defproc source (chan!(int<8>) X)
+{
+  int<8> i;
+  chp {
+    i := 0;
+  *[ i < 100 -> X!i; i := i + 1 ]
+  }
+}
+
+defproc sink (chan?(int<8>) X)
+{
+  int<8> v;
+  chp {
+    *[ X?v; log ("Received value: ", v) ]
+  }
+}
+
+
+
+defproc test()
+{
+   source src;
+   sink snk;
+   buffer<10> b(src.X, snk.X);
+}
