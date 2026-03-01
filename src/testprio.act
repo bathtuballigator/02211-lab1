@@ -1,0 +1,35 @@
+import "prio.act";
+
+defproc insert (chan!(int<8>) X; chan?(int<8>) Xret)
+{
+  int<8> i;
+  int<8> arr[12];
+  chp {
+    arr[0] := 6;  arr[1] := 2;  arr[2] := 9;
+    arr[3] := 3;  arr[4] := 0;  arr[5] := 1;
+    arr[6] := 1;  arr[7] := 2;  arr[8] := 4;
+    arr[9] := 7;  arr[10] := 3; arr[11] := 2;
+    i := 0;
+    *[ i < 12 -> X!arr[i]; i := i + 1 ]
+  }
+}
+
+defproc remove (chan?(int<8>) X; chan!(int<8>) Xret)
+{
+  int<8> v;
+  chp {
+    *[ X?v; log ("Removed value: ", v); Xret!v ]
+  }
+}
+
+defproc test ()
+{
+  chan(int<8>) ins_to_buf;
+  chan(int<8>) buf_to_ins;
+  chan(int<8>) buf_to_rem;
+  chan(int<8>) rem_to_buf;
+
+  insert src(ins_to_buf, buf_to_ins);
+  remove snk(buf_to_rem, rem_to_buf);
+  prio<10> b(ins_to_buf, buf_to_ins, buf_to_rem, rem_to_buf);
+}

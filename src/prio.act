@@ -1,81 +1,37 @@
-defproc oneplace (chan?(int<8>) l; chan!(int<8>) l2; chan!(int<8>) r; chan?(int<8>) r2; chan?(bool) instr)
+defproc oneplace (chan?(int<8>) l; chan!(int<8>) l2; chan!(int<8>) r; chan?(int<8>) r2)
 {
   int<8> x;
-  int<8> cur = 0;
-  bool cmd;
+  int<8> cur;
   chp {
-    *[ instr?cmd;
-      [ cmd -> l?x;
-        [ cur = 0 -> cur := x
-          [] x < cur -> r!cur; cur := x
-          [] else -> r!x;
-        ] 
-        [] else -> r2?x;
-          [cur = 0 -> cur := x];
+    cur := 0;
+    *[
+      [| #l -> l?x;
+          [ cur = 0 -> cur := x
+            [] x < cur -> r!cur; cur := x
+            [] else -> r!x
+          ]
+        [] #r2 -> r2?x;
+          [ cur = 0 -> cur := x
+            [] else -> skip
+          ];
           l2!cur
-        ]
-      ]
+      |];
+      log ("slot cur = ", cur)
+    ]
   }
 }
 
-template<pint N> defproc buffer (chan?(int<8>) l; chan!(int<8>) l2; chan!(int<8>) r; chan?(int<8>) r2; chan?(bool) instr)
+template<pint N> defproc prio (chan?(int<8>) l; chan!(int<8>) l2; chan!(int<8>) r; chan?(int<8>) r2)
 {
-  { N >= 1 : "Buffer should have at least one element!" }; // assertion
+  { N >= 1 : "Buffer should have at least one element!" };
   oneplace buf[N];
-  (i:N-1: buf[i].r=buf[i+1].l; buf[i+1].l2=buf[i].r2; buf[i].instr=instr)
-  buf[0].l=l;
-  buf[0].r2=r2;
-  buf[N-1].r=r;
-  buf[N-1].l2=l2;
-}
 
-template <pint N> defproc prio(chan?(int<16>) in; chan?(bool) control; chan!(int<16>) out)
-{
-  { N >= 2 : "Buffer should have at least two elements!" }; // assertion
-  bool ctrl;
-  sink snk;
-  insert src;
-  buffer<4> buf;
-  
-
-}
-
-defproc insert (chan!(int<8>) X)
-{
-  int<8> v;
-  int<8> i;
-  int<8> arr[12];
-  chp {
-    arr[0] := 6;
-    arr[1] := 2;
-    arr[2] := 9;
-    arr[3] := 3;
-    arr[4] := 0;
-    arr[5] := 1;
-    arr[6] := 1;
-    arr[7] := 2;
-    arr[8] := 4;
-    arr[9] := 7;
-    arr[10] := 3;
-    arr[11] := 2;
-    i := 0;
-    *[ i < 12 -> X!arr[i]; i := i + 1; log ("Sending value: ", arr[i]) ]
-  }
-}
-
-defproc source (chan!(int<8>) X)
-{
-  int<8> i;
-  chp {
-    i := 0;
-  *[ i < 100 -> X!i; i := i + 1 ]
-  }
-}
-
-defproc sink (chan?(int<8>) X)
-{
-  int<8> v;
-  chp {
-    *[ X?v; log ("Received value: ", v) ]
-  }
+  (i:N-1:
+    buf[i].r = buf[i+1].l;
+    buf[i+1].l2 = buf[i].r2;
+  )
+  buf[0].l = l;
+  buf[0].r2 = r2;
+  buf[N-1].r = r;
+  buf[N-1].l2 = l2;
 }
