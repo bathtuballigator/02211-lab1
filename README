@@ -1,5 +1,5 @@
 To verify our solutions run src/run_test.sh script.
-The results for part 1 are stored in prs folder, and for part 2 in log folder.
+The results for part 1 are stored in prs folder, and for part 2 in log folder. The source file is also created for part 1 to test every circuits and the result will be printed when running the shell.
 
 In Part 2: CHP simulation we have created 2 channels - one inert and one remove.
 Remove takes the first number for the queue and shifts the other numbers stored in the buffer forward, towards the top of the queue.
