@@ -5,3 +5,9 @@ In Part 2: CHP simulation we have created 2 channels - one inert and one remove.
 Remove takes the first number for the queue and shifts the other numbers stored in the buffer forward, towards the top of the queue.
 Insert puts the first number at the top of the queue. Whenever a new number is inserted - we iterate through the queue checking if the number is smaller than the numbers inserted.
 When we encounter an already inserted number that's larger than a new number - we insert the new number in it's place and propagate the old number further down the queue.
+
+Authors:
+Corbacho, Fran  s253150@student.dtu.dk
+Firdaus, Rifki  s250169@student.dtu.dk
+Timlin, Rose Carbery    s260105@student.dtu.dk
+Wrona, Nina s250693@student.dtu.dk
